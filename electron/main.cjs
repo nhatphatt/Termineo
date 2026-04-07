@@ -1,20 +1,26 @@
-const { app, BrowserWindow, ipcMain, dialog, utilityProcess } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { spawn } = require("child_process");
 
 let mainWindow;
 let ptyHost;
 
 // In packaged app, asarUnpack puts files in app.asar.unpacked/
-function getElectronPath(filename) {
-  const normal = path.join(__dirname, filename);
-  const unpacked = normal.replace("app.asar", "app.asar.unpacked");
-  return fs.existsSync(unpacked) ? unpacked : normal;
+function resolveUnpacked(filePath) {
+  const unpacked = filePath.replace("app.asar", "app.asar.unpacked");
+  return fs.existsSync(unpacked) ? unpacked : filePath;
 }
 
 function startPtyHost() {
-  const ptyHostPath = getElectronPath("pty-host.cjs");
-  ptyHost = utilityProcess.fork(ptyHostPath);
+  const ptyHostPath = resolveUnpacked(path.join(__dirname, "pty-host.cjs"));
+
+  // Use Electron's own node runtime with ELECTRON_RUN_AS_NODE=1
+  // This runs pty-host as a regular Node.js process, so native modules work
+  ptyHost = spawn(process.execPath, [ptyHostPath], {
+    stdio: ["pipe", "pipe", "pipe", "ipc"],
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+  });
 
   ptyHost.on("message", (msg) => {
     if (!mainWindow) return;
@@ -40,6 +46,10 @@ function startPtyHost() {
     }
   });
 
+  ptyHost.stderr.on("data", (data) => {
+    console.error("PTY host stderr:", data.toString());
+  });
+
   ptyHost.on("exit", (code) => {
     console.log("PTY host exited with code", code);
   });
@@ -55,9 +65,9 @@ function createWindow() {
     backgroundColor: "#0d1117",
     frame: false,
     transparent: false,
-    icon: path.join(__dirname, "../build/icon.png"),
+    icon: path.join(__dirname, "../build/icon.ico"),
     webPreferences: {
-      preload: getElectronPath("preload.cjs"),
+      preload: resolveUnpacked(path.join(__dirname, "preload.cjs")),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -77,19 +87,19 @@ function createWindow() {
 // ── PTY IPC ──
 
 ipcMain.handle("pty:spawn", (_event, sessionId, options) => {
-  ptyHost.postMessage({ type: "spawn", sessionId, ...(options || {}) });
+  ptyHost.send({ type: "spawn", sessionId, ...(options || {}) });
 });
 
 ipcMain.handle("pty:write", (_event, sessionId, data) => {
-  ptyHost.postMessage({ type: "write", sessionId, data });
+  ptyHost.send({ type: "write", sessionId, data });
 });
 
 ipcMain.handle("pty:resize", (_event, sessionId, cols, rows) => {
-  ptyHost.postMessage({ type: "resize", sessionId, cols, rows });
+  ptyHost.send({ type: "resize", sessionId, cols, rows });
 });
 
 ipcMain.handle("pty:kill", (_event, sessionId) => {
-  ptyHost.postMessage({ type: "kill", sessionId });
+  ptyHost.send({ type: "kill", sessionId });
 });
 
 // ── Window controls ──
