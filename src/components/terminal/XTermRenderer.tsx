@@ -52,11 +52,32 @@ export function XTermRenderer({ onTerminalReady, onResize }: Props) {
     terminal.loadAddon(fitAddon);
     terminal.open(containerRef.current);
 
-    // Clickable links — opens in default browser
+    // Clickable links — click to open in default browser
     const webLinksAddon = new WebLinksAddon((_event, url) => {
       window.electronAPI?.openExternal(url);
+    }, {
+      urlRegex: /https?:\/\/[^\s"')\]}>]+/,
     });
     terminal.loadAddon(webLinksAddon);
+
+    // Auto-copy on select (mouse up after selection)
+    terminal.onSelectionChange(() => {
+      const sel = terminal.getSelection();
+      if (sel) {
+        navigator.clipboard.writeText(sel).catch(() => {});
+      }
+    });
+
+    // Right-click to paste
+    const el = terminal.element;
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigator.clipboard.readText().then((text) => {
+        if (text) terminal.paste(text);
+      }).catch(() => {});
+    };
+    el?.addEventListener("contextmenu", handleContextMenu);
 
     terminalRef.current = terminal;
     fitAddonRef.current = fitAddon;
@@ -65,6 +86,8 @@ export function XTermRenderer({ onTerminalReady, onResize }: Props) {
       fitAddon.fit();
       onTerminalReady(terminal, doFit);
     });
+
+    const contextMenuCleanup = () => el?.removeEventListener("contextmenu", handleContextMenu);
 
     let rafId = 0;
     const ro = new ResizeObserver(() => {
@@ -76,6 +99,7 @@ export function XTermRenderer({ onTerminalReady, onResize }: Props) {
     return () => {
       cancelAnimationFrame(rafId);
       ro.disconnect();
+      contextMenuCleanup();
       terminal.dispose();
       terminalRef.current = null;
       fitAddonRef.current = null;

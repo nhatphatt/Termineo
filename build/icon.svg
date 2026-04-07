@@ -1,20 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1b2e"/>
+      <stop offset="0%" style="stop-color:#1e2030"/>
       <stop offset="100%" style="stop-color:#0d1117"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#58a6ff"/>
-      <stop offset="100%" style="stop-color:#bc8cff"/>
+      <stop offset="50%" style="stop-color:#a78bfa"/>
+      <stop offset="100%" style="stop-color:#f472b6"/>
     </linearGradient>
+    <linearGradient id="prompt" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3fb950"/>
+      <stop offset="100%" style="stop-color:#58a6ff"/>
+    </linearGradient>
+    <filter id="glow-filter">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
-  <!-- Rounded square background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- Terminal prompt > -->
-  <text x="100" y="320" font-family="Consolas, monospace" font-size="280" font-weight="bold" fill="url(#accent)">T</text>
-  <!-- Cursor blink line -->
-  <rect x="330" y="120" width="8" height="200" rx="4" fill="#58a6ff" opacity="0.8"/>
-  <!-- Underline accent -->
-  <rect x="80" y="370" width="352" height="6" rx="3" fill="url(#accent)" opacity="0.5"/>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Subtle border glow -->
+  <rect x="4" y="4" width="504" height="504" rx="104" fill="none" stroke="url(#glow)" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Terminal window dots -->
+  <circle cx="100" cy="100" r="14" fill="#ff5f57"/>
+  <circle cx="148" cy="100" r="14" fill="#febc2e"/>
+  <circle cx="196" cy="100" r="14" fill="#28c840"/>
+
+  <!-- Top bar line -->
+  <line x1="70" y1="135" x2="442" y2="135" stroke="#30363d" stroke-width="2"/>
+
+  <!-- Prompt chevron > -->
+  <polyline points="90,210 130,240 90,270" fill="none" stroke="url(#prompt)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-filter)"/>
+
+  <!-- "termineo" text line -->
+  <rect x="155" y="228" width="200" height="22" rx="4" fill="url(#glow)" opacity="0.8"/>
+
+  <!-- Second line: output -->
+  <rect x="90" y="300" width="280" height="14" rx="3" fill="#8b949e" opacity="0.35"/>
+  <rect x="90" y="330" width="180" height="14" rx="3" fill="#8b949e" opacity="0.2"/>
+
+  <!-- Cursor blink -->
+  <rect x="155" y="375" width="12" height="28" rx="3" fill="url(#glow)" opacity="0.9">
+    <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Bottom prompt -->
+  <polyline points="90,385 120,400 90,415" fill="none" stroke="url(#prompt)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
 </svg>
