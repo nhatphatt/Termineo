@@ -18,8 +18,16 @@ interface ElectronAPI {
   windowMaximize: () => Promise<void>;
   windowClose: () => Promise<void>;
   windowSetOpacity: (opacity: number) => Promise<void>;
+  updaterDownload: () => Promise<void>;
+  updaterInstall: () => Promise<void>;
+  updaterCheck: () => Promise<void>;
+  updaterGetVersion: () => Promise<string>;
+  onUpdaterAvailable: (callback: (payload: { version: string; releaseNotes: string }) => void) => () => void;
+  onUpdaterProgress: (callback: (payload: { percent: number; transferred: number; total: number }) => void) => () => void;
+  onUpdaterDownloaded: (callback: () => void) => () => void;
   getAvailableShells: () => Promise<{ label: string; path: string }[]>;
   selectDirectory: () => Promise<string | null>;
+  openExternal: (url: string) => Promise<void>;
 }
 
 declare global {

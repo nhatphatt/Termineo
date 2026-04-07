@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
@@ -12,11 +13,48 @@ function resolveUnpacked(filePath) {
   return fs.existsSync(unpacked) ? unpacked : filePath;
 }
 
+// ── Auto Updater ──
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-available", (info) => {
+    if (!mainWindow) return;
+    mainWindow.webContents.send("updater:available", {
+      version: info.version,
+      releaseNotes: info.releaseNotes || "",
+    });
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    if (!mainWindow) return;
+    mainWindow.webContents.send("updater:progress", {
+      percent: Math.round(progress.percent),
+      transferred: progress.transferred,
+      total: progress.total,
+    });
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    if (!mainWindow) return;
+    mainWindow.webContents.send("updater:downloaded");
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("Auto-updater error:", err.message);
+  });
+
+  // Check for updates 3 seconds after launch, then every 30 minutes
+  setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 3000);
+  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000);
+}
+
+// ── PTY Host ──
+
 function startPtyHost() {
   const ptyHostPath = resolveUnpacked(path.join(__dirname, "pty-host.cjs"));
 
-  // Use Electron's own node runtime with ELECTRON_RUN_AS_NODE=1
-  // This runs pty-host as a regular Node.js process, so native modules work
   ptyHost = spawn(process.execPath, [ptyHostPath], {
     stdio: ["pipe", "pipe", "pipe", "ipc"],
     env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
@@ -116,6 +154,24 @@ ipcMain.handle("window:setOpacity", (_event, opacity) => {
   }
 });
 
+// ── Updater IPC ──
+
+ipcMain.handle("updater:download", () => {
+  autoUpdater.downloadUpdate().catch(() => {});
+});
+
+ipcMain.handle("updater:install", () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
+ipcMain.handle("updater:check", () => {
+  autoUpdater.checkForUpdates().catch(() => {});
+});
+
+ipcMain.handle("updater:getVersion", () => {
+  return app.getVersion();
+});
+
 // ── Utilities ──
 
 ipcMain.handle("util:getShells", () => {
@@ -146,9 +202,16 @@ ipcMain.handle("util:selectDirectory", async () => {
   return result.filePaths[0];
 });
 
+ipcMain.handle("util:openExternal", (_event, url) => {
+  if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))) {
+    shell.openExternal(url);
+  }
+});
+
 app.whenReady().then(() => {
   startPtyHost();
   createWindow();
+  setupAutoUpdater();
 });
 
 app.on("window-all-closed", () => {

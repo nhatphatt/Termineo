@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface Props {
@@ -50,6 +51,12 @@ export function XTermRenderer({ onTerminalReady, onResize }: Props) {
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
     terminal.open(containerRef.current);
+
+    // Clickable links — opens in default browser
+    const webLinksAddon = new WebLinksAddon((_event, url) => {
+      window.electronAPI?.openExternal(url);
+    });
+    terminal.loadAddon(webLinksAddon);
 
     terminalRef.current = terminal;
     fitAddonRef.current = fitAddon;

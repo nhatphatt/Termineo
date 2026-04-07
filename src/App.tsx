@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { TabBar, WindowControls } from "./components/shared/TabBar";
 import { SettingsPanel } from "./components/shared/SettingsPanel";
+import { UpdateNotification } from "./components/shared/UpdateNotification";
 import { BlockList } from "./components/terminal/BlockList";
 import { useSessionStore } from "./stores/sessionStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -30,6 +31,7 @@ export default function App() {
 
   return (
     <div className="app-container" style={{ flexDirection: flexDir as "column" }}>
+      <UpdateNotification />
       <WindowControls />
       <TabBar />
       <div className="terminal-area">
