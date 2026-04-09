@@ -174,9 +174,9 @@ ipcMain.handle("updater:getVersion", () => {
 ipcMain.handle("util:getShells", () => {
   const shells = [];
   const candidates = [
+    { label: "PowerShell 7", path: "C:\\Program Files\\PowerShell\\7\\pwsh.exe" },
     { label: "PowerShell", path: "powershell.exe" },
     { label: "CMD", path: "cmd.exe" },
-    { label: "PowerShell 7", path: "C:\\Program Files\\PowerShell\\7\\pwsh.exe" },
     { label: "Git Bash", path: "C:\\Program Files\\Git\\bin\\bash.exe" },
     { label: "WSL", path: "wsl.exe" },
   ];

@@ -12,6 +12,16 @@ export function TabBar() {
 
   const isVertical = tabPosition === "left" || tabPosition === "right";
 
+  const handleMinimize = () => {
+    window.electronAPI?.windowMinimize();
+  };
+  const handleMaximize = () => {
+    window.electronAPI?.windowMaximize();
+  };
+  const handleClose = () => {
+    window.electronAPI?.windowClose();
+  };
+
   return (
     <div className={`tab-bar tab-bar-${tabPosition}`}>
       <div className={`tab-list ${isVertical ? "tab-list-vertical" : "tab-list-horizontal"}`}>
@@ -60,9 +70,9 @@ export function TabBar() {
         </button>
         {tabPosition === "top" && (
           <div className="window-controls">
-            <button onClick={() => window.electronAPI?.windowMinimize()} aria-label="Minimize">─</button>
-            <button onClick={() => window.electronAPI?.windowMaximize()} aria-label="Maximize">□</button>
-            <button className="win-close" onClick={() => window.electronAPI?.windowClose()} aria-label="Close">×</button>
+            <button onClick={handleMinimize} aria-label="Minimize" title="Minimize">─</button>
+            <button onClick={handleMaximize} aria-label="Maximize" title="Maximize">□</button>
+            <button className="win-close" onClick={handleClose} aria-label="Close" title="Close">×</button>
           </div>
         )}
       </div>
@@ -73,11 +83,22 @@ export function TabBar() {
 export function WindowControls() {
   const tabPosition = useSettingsStore((s) => s.tabPosition);
   if (tabPosition === "top") return null;
+
+  const handleMinimize = () => {
+    window.electronAPI?.windowMinimize();
+  };
+  const handleMaximize = () => {
+    window.electronAPI?.windowMaximize();
+  };
+  const handleClose = () => {
+    window.electronAPI?.windowClose();
+  };
+
   return (
     <div className="floating-window-controls">
-      <button onClick={() => window.electronAPI?.windowMinimize()}>─</button>
-      <button onClick={() => window.electronAPI?.windowMaximize()}>□</button>
-      <button className="win-close" onClick={() => window.electronAPI?.windowClose()}>×</button>
+      <button onClick={handleMinimize} title="Minimize">─</button>
+      <button onClick={handleMaximize} title="Maximize">□</button>
+      <button className="win-close" onClick={handleClose} title="Close">×</button>
     </div>
   );
 }

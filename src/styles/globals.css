@@ -173,7 +173,7 @@ html, body, #root {
 .tab-new-vertical:hover { color: var(--text-primary); background: var(--bg-block); }
 .tab-new-vertical { width: 100%; text-align: center; }
 
-.tab-actions { display: flex; align-items: center; -webkit-app-region: no-drag; }
+.tab-actions { display: flex; align-items: center; -webkit-app-region: no-drag; position: relative; z-index: 10; }
 .tab-actions-vertical { flex-direction: column; align-items: stretch; padding: 4px 0; }
 
 .tab-action-btn {
@@ -189,6 +189,7 @@ html, body, #root {
   justify-content: center;
   border-radius: 6px;
   -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 .tab-action-btn:hover { background: var(--bg-block); color: var(--text-primary); }
 .tab-actions-vertical .tab-action-btn { width: 100%; }
@@ -197,6 +198,8 @@ html, body, #root {
 .window-controls {
   display: flex;
   -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 10;
 }
 .window-controls button {
   background: none;
@@ -209,6 +212,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 .window-controls button:hover { background: var(--bg-block); color: var(--text-primary); }
 .window-controls .win-close:hover { background: #e81123; color: white; }
@@ -218,7 +223,7 @@ html, body, #root {
   position: fixed;
   top: 0;
   right: 0;
-  z-index: 50;
+  z-index: 100;
   display: flex;
   -webkit-app-region: no-drag;
 }
@@ -233,6 +238,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
 }
 .floating-window-controls button:hover { background: var(--bg-block); color: var(--text-primary); }
 .floating-window-controls .win-close:hover { background: #e81123; color: white; }

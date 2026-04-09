@@ -33,11 +33,27 @@ function appendToEnvPath(env, extraPath) {
 function resolveStarshipPath() {
   const candidates = [
     path.join(os.homedir(), ".starship", "bin", "starship.exe"),
+    path.join(os.homedir(), ".cargo", "bin", "starship.exe"),
+    path.join(os.homedir(), "scoop", "shims", "starship.exe"),
+    "C:\\Program Files\\starship\\bin\\starship.exe",
     path.join(__dirname, "..", "bin", "starship.exe").replace("app.asar", "app.asar.unpacked"),
     path.join(path.dirname(process.execPath), "resources", "bin", "starship.exe"),
   ];
 
-  return candidates.find((candidate) => fs.existsSync(candidate)) || null;
+  const found = candidates.find((candidate) => fs.existsSync(candidate));
+  if (found) return found;
+
+  // Fallback: check if starship is in PATH
+  try {
+    const { execSync } = require("child_process");
+    const result = execSync("where.exe starship.exe", { encoding: "utf-8", timeout: 3000 }).trim();
+    if (result) {
+      const firstLine = result.split(/\r?\n/)[0].trim();
+      if (firstLine && fs.existsSync(firstLine)) return firstLine;
+    }
+  } catch {}
+
+  return null;
 }
 
 function getShellLaunchOptions(shell) {
@@ -53,12 +69,25 @@ function getShellLaunchOptions(shell) {
       ? starshipPath.replace(/'/g, "''")
       : "starship";
 
-    const initCommand = `if (Get-Command '${powershellStarship}' -ErrorAction SilentlyContinue) { Invoke-Expression (& '${powershellStarship}' init powershell) }`;
+    // Use --print-full-init | Out-String for proper PowerShell 7+ compatibility
+    const initCommand = `if (Get-Command '${powershellStarship}' -ErrorAction SilentlyContinue) { Invoke-Expression (& '${powershellStarship}' init powershell --print-full-init | Out-String) }`;
 
     return {
       env,
       args: ["-NoLogo", "-NoExit", "-Command", initCommand],
     };
+  }
+
+  // Bash / Zsh / other shells
+  if (shell.includes("bash") || shell.includes("zsh")) {
+    const shellName = shell.includes("zsh") ? "zsh" : "bash";
+    if (starshipPath) {
+      env.STARSHIP_INIT = "1";
+      return {
+        env,
+        args: ["--login", "-c", `eval "$(${starshipPath.replace(/\\/g, "/")} init ${shellName})"; exec ${shellName}`],
+      };
+    }
   }
 
   return {
