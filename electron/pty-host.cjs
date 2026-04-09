@@ -32,12 +32,22 @@ process.on("message", (msg) => {
       const args = (shell.includes("powershell") || shell.includes("pwsh")) ? ["-NoLogo"] : [];
 
       try {
+        // Ensure Starship prompt is available in PATH
+        const starshipBin = path.join(os.homedir(), ".starship", "bin");
+        const envWithStarship = { ...process.env };
+        if (envWithStarship.PATH && !envWithStarship.PATH.includes(starshipBin)) {
+          envWithStarship.PATH = `${starshipBin};${envWithStarship.PATH}`;
+        } else if (envWithStarship.Path && !envWithStarship.Path.includes(starshipBin)) {
+          envWithStarship.Path = `${starshipBin};${envWithStarship.Path}`;
+        }
+        envWithStarship.STARSHIP_CONFIG = path.join(os.homedir(), ".config", "starship.toml");
+
         const proc = pty.spawn(shell, args, {
           name: "xterm-256color",
           cols: cols || 80,
           rows: rows || 24,
           cwd: cwd || os.homedir(),
-          env: process.env,
+          env: envWithStarship,
         });
 
         proc.onData((output) => {

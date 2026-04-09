@@ -5,6 +5,9 @@ export type TabPosition = "top" | "bottom" | "left" | "right";
 export type CursorStyle = "bar" | "block" | "underline";
 
 export const FONT_OPTIONS = [
+  "CaskaydiaCove Nerd Font",
+  "JetBrainsMono Nerd Font",
+  "FiraCode Nerd Font",
   "Cascadia Code",
   "JetBrains Mono",
   "Fira Code",
